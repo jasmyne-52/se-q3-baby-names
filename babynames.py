@@ -30,6 +30,7 @@ Suggested milestones for incremental development:
  - Build the [year, 'name rank', ... ] list and print it
  - Fix main() to use the extracted_names list
 """
+__author__ = "Jasmyne Ford"
 
 import sys
 import re
@@ -44,7 +45,29 @@ def extract_names(filename):
     ['2006', 'Aaliyah 91', 'Aaron 57', 'Abagail 895', ...]
     """
     names = []
-    # +++your code here+++
+    f = open(filename, 'rU')
+    text = f.read()
+    # Could process the file line-by-line, but regex on the whole text
+    # at once is even easier.
+    year_match = re.search(r'Popularity\sin\s(\d\d\d\d)', text)
+    if not year_match:
+        # We didn't find a year, so we'll exit with an error message.
+        sys.stderr.write('Couldn\'t find the year!\n')
+        sys.exit(1)
+    year = year_match.group(1)
+    names.append(year)
+    tuples = re.findall(r'<td>(\d+)</td><td>(\w+)</td><td>(\w+)</td>', text)
+    names_to_rank = {}
+    for rank_tuple in tuples:
+        (rank, boyname, girlname) = rank_tuple
+        if boyname not in names_to_rank:
+            names_to_rank[boyname] = rank
+        if girlname not in names_to_rank:
+            names_to_rank[girlname] = rank
+    sorted_names = sorted(names_to_rank.keys())
+    for name in sorted_names:
+        names.append(name + " " + names_to_rank[name])
+    # Get the year.
     return names
 
 
@@ -76,12 +99,24 @@ def main(args):
 
     # option flag
     create_summary = ns.summaryfile
+    # create_summary = False
+    # if ns[0] == '--summaryfile':
+    #     summary = True
+    #     del ns[0]
 
     # For each filename, call `extract_names()` with that single file.
     # Format the resulting list as a vertical list (separated by newline \n).
     # Use the create_summary flag to decide whether to print the list
     # or to write the list to a summary file (e.g. `baby1990.html.summary`).
-
+    for filename in file_list:
+        names = extract_names(filename)
+        text = '\n'.join(names)
+        if create_summary:
+            outf = open(filename + '.summary', 'w')
+            outf.write(text + '\n')
+            outf.close()
+        else:
+            print(text)
     # +++your code here+++
 
 
